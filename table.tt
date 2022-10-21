@@ -1,0 +1,15 @@
+<table>
+<tr>
+<th></th><th>Parti</th>
+[% FOR p IN abbrevs -%]<th>[% p -%]</th>[% END -%]
+</tr>
+<tr>
+<th></th><th>Riket</th>
+[% FOR t IN totals -%]<th>[% t -%]</th>[% END -%]
+</tr>
+[% FOR r IN table -%]
+<tr>
+[% FOR c IN r -%]<td>[% c -%]</td>[% END -%]
+</tr>
+[% END -%]
+</table>
