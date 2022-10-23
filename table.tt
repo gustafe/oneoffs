@@ -1,11 +1,17 @@
-<table>
+<html>
+<head>
+<link rel="stylesheet" href="https://gerikson.com/stylesheets/sandbox.css" title="Sandbox" />
+</head>
+<body>
+<table><caption>Fördelning av partiernas procentandel i olika valdistrikt jämfört med riket</caption>
+
 <tr>
-<th></th><th>Parti</th>
-[% FOR p IN abbrevs -%]<th>[% p -%]</th>[% END -%]
+<th><br/></th><th>Distrikt</th>
+[% FOR p IN abbrevs -%]<th>[% p -%]</th>[% END -%]<th>Avvikelse (&Sigma; &Delta;<sup>2</sup>)</th>
 </tr>
 <tr>
-<th></th><th>Riket</th>
-[% FOR t IN totals -%]<th>[% t -%]</th>[% END -%]
+<td></td><td>Riket</td>
+[% FOR t IN totals -%]<td>[% t -%]</td>[% END -%]<td>0,00</td>
 </tr>
 [% FOR r IN table -%]
 <tr>
@@ -13,3 +19,5 @@
 </tr>
 [% END -%]
 </table>
+</body>
+</html>
