@@ -24,9 +24,11 @@ while (<DATA>) {
 for (my $i= 0; $i<=$#data; $i++) {
     my $deaths = $data[$i]{deaths}-$data[$i-1]{deaths} if $i>0; 
     my $days = $data[$i]{date}->delta_days($data[$i-1]{date})->delta_days() if $i>0;
-    printf("<tr><td>%10s</td><td>%14s</td><td>%4d</td><td>%6.01f</td></tr>\n",
+my $row=    sprintf("<tr><td>%10s</td><td>%14s</td><td>%4d</td><td>%6.01f</td></tr>\n",
 	   $data[$i]{date}->strftime("%Y-%m-%d"),
-	   commify($data[$i]{deaths}), $days?$days:0, ($deaths and $days)?$deaths/$days:0);
+		    commify($data[$i]{deaths}), $days?$days:0, ($deaths and $days)?$deaths/$days:0);
+    $row =~ tr/./,/;
+    print $row;
     
 }
 say "</table>";
