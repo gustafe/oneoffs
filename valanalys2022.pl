@@ -3,6 +3,7 @@ use Modern::Perl '2015';
 ###
 use Data::Dump qw/dump/;
 use Template;
+use List::Util qw/sum/;
 use utf8;
 binmode( STDOUT, ':encoding(UTF-8)' );
 
@@ -130,6 +131,29 @@ my @max_distrikt;
 for my $p ( keys %min_max ) {
     $max_distrikt[ $top_level{$p}->{pos} - 1 ] = $min_max{$p}{max}{code};
 }
+my %distrikt_stats;
+
+for my $d_id (keys %data) {
+#    say $d_id;
+    for my $p (keys %{$data{$d_id}}) {
+#	say $p;
+	next if ( $p eq 'Distriktnamn'
+            or $p eq 'Valkrets'
+            or $p eq 'Totalsumma' );
+	next if $top_level{$p};
+	$distrikt_stats{$p}{total}+= $data{$d_id}{$p}{num};
+	if (exists $distrikt_stats{$p}{max_num}  ) {
+	    if ($data{$d_id}{$p}{num}>$distrikt_stats{$p}{max_num} and $data{$d_id}{Distriktnamn} !~ /Uppsamling/) {
+	    
+		$distrikt_stats{$p}{max_num} = $data{$d_id}{$p}{num};
+		$distrikt_stats{$p}{max_id} = $d_id;
+	}
+	} else {
+	    $distrikt_stats{$p}{max_num} = $data{$d_id}{$p}{num};
+	    $distrikt_stats{$p}{max_id} = $d_id;
+	}
+    }
+}
 
 my @sorted = sort { $stats{$a} <=> $stats{$b} } keys %stats;
 my $min    = $sorted[0];
@@ -159,16 +183,25 @@ for my $p ( sort { $top_level{$a}{pos} <=> $top_level{$b}{pos} }
     }
     $count++;
 }
+my @max_ovr;
+for my $p (sort {$distrikt_stats{$b}{total} <=> $distrikt_stats{ $a}{total} || $a cmp $b} keys %distrikt_stats ) {
+    #push @max_ovr, "$p | $data{$distrikt_stats{$p}{max_id}}{Distriktnamn} ($data{$distrikt_stats{$p}{max_id}}{Valkrets}) | $distrikt_stats{$p}{max_num} | $data{$distrikt_stats{$p}{max_id}}{Totalsumma} | $distrikt_stats{$p}{total}" ;
+    push @max_ovr, [$p, $data{$distrikt_stats{$p}{max_id}}{Distriktnamn}.' ('.$data{$distrikt_stats{$p}{max_id}}{Valkrets}.')', $distrikt_stats{$p}{max_num}, commify($distrikt_stats{$p}{total})];
+}
+
 my $tt    = Template->new( { INCLUDE_PATH => "./", ENCODING => 'UTF-8' } );
 my %tdata = (
     abbrevs => \@abbrevs,
-    totals  => [ map {tr/./,/r} map { sprintf( "%.02f", $_ ) } @totals ],
-    table   => $table,
+	     totals  => [ map {tr/./,/r} map { sprintf( "%.02f", $_ ) } @totals ],
+	     all_votes=>commify (sum map {$top_level{$_}->{total}} keys %top_level),
+	     table   => $table,
+	     max_ovr=>\@max_ovr,
 );
 my $out = '';
 $tt->process( "table.tt", \%tdata ) or die $tt->error;
 
 sub print_distrikt {
+    # return percentages per party in the Riksdag for a valdistrikt
     my ($code) = @_;
     my @out;
     my $rest_p;
@@ -187,36 +220,15 @@ sub print_distrikt {
     }
     push @out, ( $rest_p ? $rest_p : 0 ) / $data{$code}{Totalsumma} * 100;
     push @out, $stats{$code};
+    my $return = [$data{$code}{Distriktnamn} . '<br />(' . $data{$code}{Valkrets} . ')',
+		  map {tr/./,/r} map { sprintf( "%.2f", $_ ) } @out];
+    push @$return, commify($data{$code}->{Totalsumma});
+      
 
-    return [
-        $data{$code}{Distriktnamn} . '<br />(' . $data{$code}{Valkrets} . ')',
-        map {tr/./,/r} map { sprintf( "%.2f", $_ ) } @out
-    ];
+    return $return;
 }
-
-__END__
-
-say join(" ", "Parti", @abbrevs);
-say join("  ", "Riket", map {sprintf("%.02f", $_)} @totals);
-print "Mest normal: " ;print_distrikt( $min );
-print "Mest avvikande: "; print_distrikt( $max );
-for my $p (sort {$top_level{$a}{pos}<=>$top_level{$b}{pos}} keys %top_level) {
-    print "Max $top_level{$p}{abbrev}: ";
-    print_distrikt( $max_distrikt[$top_level{$p}{pos}-1]) if defined $max_distrikt[$top_level{$p}{pos}-1];
+sub commify {
+    my $text = reverse $_[0];
+    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1;F202x\#\&/g;
+    return scalar reverse $text;
 }
-
-for my $p (sort keys %min_max) {
-    
-    say "$p max: $data{$min_max{$p}{max}{code}}->{Distriktnamn} ($data{$min_max{$p}{max}{code}}->{Valkrets}) ".sprintf("%.02f%%",$min_max{$p}->{max}{pct})." ".$min_max{$p}->{max}{num};
-}
-
-
-  for my $d (sort keys %data) {
-    say "==> $d $data{$d}->{Distriktnamn} ($data{$d}->{Valkrets}): $data{$d}->{Totalsumma} röster";
-    for my $h (sort keys %{$data{$d}}) {
-	next if ( $h eq 'Distriktnamn' or $h eq 'Valkrets' or $h eq 'Totalsumma');
-	say "$h $data{$d}->{$h}{num} ".sprintf("%.02f", $data{$d}->{$h}{pct});
-    }
-}
-
-
