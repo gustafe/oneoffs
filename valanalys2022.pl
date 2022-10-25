@@ -35,7 +35,6 @@ for my $party ( keys %top_level ) {
     $percentages{$party} = $top_level{$party}->{total} / $sum * 100;
 }
 
-
 # read detailed data
 my $filename
     = './Slutlig-rostdata-per-distrikt-riksdagsvalet-med-distriktkoder.csv';
@@ -133,25 +132,29 @@ for my $p ( keys %min_max ) {
 }
 my %distrikt_stats;
 
-for my $d_id (keys %data) {
-#    say $d_id;
-    for my $p (keys %{$data{$d_id}}) {
-#	say $p;
-	next if ( $p eq 'Distriktnamn'
+for my $d_id ( keys %data ) {
+
+    for my $p ( keys %{ $data{$d_id} } ) {
+
+        next
+            if ( $p eq 'Distriktnamn'
             or $p eq 'Valkrets'
             or $p eq 'Totalsumma' );
-	next if $top_level{$p};
-	$distrikt_stats{$p}{total}+= $data{$d_id}{$p}{num};
-	if (exists $distrikt_stats{$p}{max_num}  ) {
-	    if ($data{$d_id}{$p}{num}>$distrikt_stats{$p}{max_num} and $data{$d_id}{Distriktnamn} !~ /Uppsamling/) {
-	    
-		$distrikt_stats{$p}{max_num} = $data{$d_id}{$p}{num};
-		$distrikt_stats{$p}{max_id} = $d_id;
-	}
-	} else {
-	    $distrikt_stats{$p}{max_num} = $data{$d_id}{$p}{num};
-	    $distrikt_stats{$p}{max_id} = $d_id;
-	}
+        next if $top_level{$p};
+        $distrikt_stats{$p}{total} += $data{$d_id}{$p}{num};
+        if ( exists $distrikt_stats{$p}{max_num} ) {
+            if (    $data{$d_id}{$p}{num} > $distrikt_stats{$p}{max_num}
+                and $data{$d_id}{Distriktnamn} !~ /Uppsamling/ )
+            {
+
+                $distrikt_stats{$p}{max_num} = $data{$d_id}{$p}{num};
+                $distrikt_stats{$p}{max_id}  = $d_id;
+            }
+        }
+        else {
+            $distrikt_stats{$p}{max_num} = $data{$d_id}{$p}{num};
+            $distrikt_stats{$p}{max_id}  = $d_id;
+        }
     }
 }
 
@@ -160,8 +163,10 @@ my $min    = $sorted[0];
 my $max    = $sorted[-1];
 my @abbrevs;
 my @totals;
-for my $p ( sort { $top_level{$a}{pos} <=> $top_level{$b}{pos} }
-    keys %top_level )
+for my $p (
+    sort { $top_level{$a}{pos} <=> $top_level{$b}{pos} }
+    keys %top_level
+    )
 {
     push @abbrevs, $top_level{$p}{abbrev} if $top_level{$p}{pos};
     push @totals,  $percentages{$p};
@@ -170,8 +175,10 @@ my $table;
 push @$table, [ 'Närmast',       @{ print_distrikt($min) } ];
 push @$table, [ 'Längst ifrån', @{ print_distrikt($max) } ];
 my $count = 1;
-for my $p ( sort { $top_level{$a}{pos} <=> $top_level{$b}{pos} }
-    keys %top_level )
+for my $p (
+    sort { $top_level{$a}{pos} <=> $top_level{$b}{pos} }
+    keys %top_level
+    )
 {
     if ( defined $max_distrikt[ $top_level{$p}{pos} - 1 ] ) {
         my $data_row
@@ -184,23 +191,37 @@ for my $p ( sort { $top_level{$a}{pos} <=> $top_level{$b}{pos} }
     $count++;
 }
 my @max_ovr;
-for my $p (sort {$distrikt_stats{$b}{total} <=> $distrikt_stats{ $a}{total} || $a cmp $b} keys %distrikt_stats ) {
-    #push @max_ovr, "$p | $data{$distrikt_stats{$p}{max_id}}{Distriktnamn} ($data{$distrikt_stats{$p}{max_id}}{Valkrets}) | $distrikt_stats{$p}{max_num} | $data{$distrikt_stats{$p}{max_id}}{Totalsumma} | $distrikt_stats{$p}{total}" ;
-    push @max_ovr, [$p, $data{$distrikt_stats{$p}{max_id}}{Distriktnamn}.' ('.$data{$distrikt_stats{$p}{max_id}}{Valkrets}.')', $distrikt_stats{$p}{max_num}, commify($distrikt_stats{$p}{total})];
+for my $p (
+    sort {
+        $distrikt_stats{$b}{total} <=> $distrikt_stats{$a}{total}
+            || $data{$distrikt_stats{$a}{max_id}}{Totalsumma} <=> $data{$distrikt_stats{$b}{max_id}}{Totalsumma}
+    } keys %distrikt_stats
+    )
+{
+    push @max_ovr,
+        [
+        $p,
+        $data{ $distrikt_stats{$p}{max_id} }{Distriktnamn} . ' ('
+            . $data{ $distrikt_stats{$p}{max_id} }{Valkrets} . ')',
+        $distrikt_stats{$p}{max_num},
+        commify( $distrikt_stats{$p}{total} )
+        ];
 }
 
 my $tt    = Template->new( { INCLUDE_PATH => "./", ENCODING => 'UTF-8' } );
 my %tdata = (
     abbrevs => \@abbrevs,
-	     totals  => [ map {tr/./,/r} map { sprintf( "%.02f", $_ ) } @totals ],
-	     all_votes=>commify (sum map {$top_level{$_}->{total}} keys %top_level),
-	     table   => $table,
-	     max_ovr=>\@max_ovr,
+    totals  => [ map {tr/./,/r} map { sprintf( "%.02f", $_ ) } @totals ],
+    all_votes =>
+        commify( sum map { $top_level{$_}->{total} } keys %top_level ),
+    table   => $table,
+    max_ovr => \@max_ovr,
 );
 my $out = '';
 $tt->process( "table.tt", \%tdata ) or die $tt->error;
 
 sub print_distrikt {
+
     # return percentages per party in the Riksdag for a valdistrikt
     my ($code) = @_;
     my @out;
@@ -220,13 +241,15 @@ sub print_distrikt {
     }
     push @out, ( $rest_p ? $rest_p : 0 ) / $data{$code}{Totalsumma} * 100;
     push @out, $stats{$code};
-    my $return = [$data{$code}{Distriktnamn} . '<br />(' . $data{$code}{Valkrets} . ')',
-		  map {tr/./,/r} map { sprintf( "%.2f", $_ ) } @out];
-    push @$return, commify($data{$code}->{Totalsumma});
-      
+    my $return = [
+        $data{$code}{Distriktnamn} . '<br />(' . $data{$code}{Valkrets} . ')',
+        map {commify($_)} map {tr/./,/r} map { sprintf( "%.2f", $_ ) } @out
+    ];
+    push @$return, commify( $data{$code}->{Totalsumma} );
 
     return $return;
 }
+
 sub commify {
     my $text = reverse $_[0];
     $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1;F202x\#\&/g;

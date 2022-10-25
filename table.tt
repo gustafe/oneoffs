@@ -9,13 +9,13 @@
 <th><br/></th><th>Distrikt</th>[% FOR p IN abbrevs -%]<th>[% p -%]</th>[% END -%]<th>Avvikelse<br />(&Sigma; &Delta;<sup>2</sup>)</th><th>Antal röster</th>
 </tr>
 <tr><td></td><td class="text">Riket</td>[% FOR t IN totals -%]<td>[% t -%]</td>[% END -%]<td>0,00</td><td>[% all_votes -%]</td></tr>
-[% FOR r IN table -%]<tr>[% FOR c IN [0 .. r.max] -%][% IF c<=2 -%][% THEN -%]<td class="text">[% r.$c -%]</td>[% ELSE -%]<td >[% r.$c -%]</td>[% END -%][% END -%]
+[% FOR r IN table -%]<tr>[% FOR c IN [0 .. r.max] -%][% IF c<=1 -%][% THEN -%]<td class="text">[% r.$c -%]</td>[% ELSE -%]<td >[% r.$c -%]</td>[% END -%][% END -%]
 </tr>
 [% END -%]
 </table>
 
 <p />
-<table><caption>Övriga anmälda partier: distrikt med flest antal röster</caption>
+<table><caption>Övriga anmälda partier: distrikt med flest antal röster. Om ett distrikt har lika många presenteras den med flest avlagda röster totalt.</caption>
 <tr><th>Parti</th><th>Bästa distrikt</th><th>Antal röster distrikt</th><th>Antal röster riket</th></tr>
 [% FOR r IN max_ovr -%]<tr>[% FOR i IN [ 0 .. r.max ] -%][% IF i <= 1 -%][% THEN -%]<td class="text">[% r.$i -%]</td>[% ELSE -%]<td>[% r.$i -%]</td>[% END -%][% END -%]
 </tr>
