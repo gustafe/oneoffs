@@ -1,13 +1,13 @@
 <html>
 <head>
 <link rel="stylesheet" href="https://gerikson.com/stylesheets/sandbox.css" title="Sandbox" />
+<meta charset="utf-8">
 </head>
 <body>
 <table><caption>Fördelning av partiernas procentandel i olika valdistrikt jämfört med riket</caption>
 
 <tr>
-<th><br/></th><th>Distrikt</th>[% FOR p IN abbrevs -%]<th>[% p -%]</th>[% END -%]<th>Avvikelse<br />(&Sigma; &Delta;<sup>2</sup>)</th><th>Antal röster</th>
-</tr>
+<th><br/></th><th>Distrikt</th>[% FOR p IN abbrevs -%]<th>[% p -%]</th>[% END -%]<th>Avvikelse<br />(&Sigma; &Delta;<sup>2</sup>)</th><th>Antal röster</th></tr>
 <tr><td></td><td class="text">Riket</td>[% FOR t IN totals -%]<td>[% t -%]</td>[% END -%]<td>0,00</td><td>[% all_votes -%]</td></tr>
 [% FOR r IN table -%]<tr>[% FOR c IN [0 .. r.max] -%][% IF c<=1 -%][% THEN -%]<td class="text">[% r.$c -%]</td>[% ELSE -%]<td >[% r.$c -%]</td>[% END -%][% END -%]
 </tr>
