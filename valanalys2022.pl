@@ -30,9 +30,9 @@ my $sum;
 for my $party ( keys %riksdagspartier ) {
     $sum += $riksdagspartier{$party}->{total};
 }
-my %rdp_percentages;
+my %rdp_procentandel;
 for my $party ( keys %riksdagspartier ) {
-    $rdp_percentages{$party} = $riksdagspartier{$party}->{total} / $sum * 100;
+    $rdp_procentandel{$party} = $riksdagspartier{$party}->{total} / $sum * 100;
 }
 
 # read detailed data
@@ -41,7 +41,7 @@ my $filename
 
 open F, "<:encoding(UTF-8)", $filename or die "can't open $filename: $!";
 
-my %headings;
+my %partier;
 my %distriktsdata;
 
 my $current_valkrets;
@@ -51,10 +51,10 @@ while (<F>) {
     chomp;
     s/\r//gm;
     my @line = split( /;/, $_ );
-    if ( $. == 2 ) {    # headings
+    if ( $. == 2 ) {    # partier
         for my $idx ( 0 .. $#line ) {
             $line[$idx] =~ s/^\s//;
-            $headings{$idx} = $line[$idx];
+            $partier{$idx} = $line[$idx];
         }
         next;
     }
@@ -67,9 +67,9 @@ while (<F>) {
         my $total       = $line[$#line];
         for my $idx ( 3 .. $#line - 1 ) {
             if ( $line[$idx] ne '' ) {
-                $distriktsdata{$distriktkod}->{ $headings{$idx} }->{num}
+                $distriktsdata{$distriktkod}->{ $partier{$idx} }->{num}
                     = $line[$idx];
-                $distriktsdata{$distriktkod}->{ $headings{$idx} }->{pct}
+                $distriktsdata{$distriktkod}->{ $partier{$idx} }->{pct}
                     = $line[$idx] / $total * 100;
             }
 
@@ -92,9 +92,9 @@ for my $d ( keys %distriktsdata ) {
             if ( $h eq 'Distriktnamn'
             or $h eq 'Valkrets'
             or $h eq 'Totalsumma' );
-        if ( exists $rdp_percentages{$h} ) {
+        if ( exists $rdp_procentandel{$h} ) {
             $sum_squares
-                += ( $rdp_percentages{$h} - $distriktsdata{$d}->{$h}->{pct} )
+                += ( $rdp_procentandel{$h} - $distriktsdata{$d}->{$h}->{pct} )
                 **2;
         }
         next unless exists $riksdagspartier{$h};
@@ -173,7 +173,7 @@ for my $p (
     )
 {
     push @abbrevs, $riksdagspartier{$p}{abbrev} if $riksdagspartier{$p}{pos};
-    push @totals,  $rdp_percentages{$p};
+    push @totals,  $rdp_procentandel{$p};
 }
 my $table;
 push @$table, [ 'Närmast',       @{ print_distrikt($min) } ];
