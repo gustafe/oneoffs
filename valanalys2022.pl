@@ -32,7 +32,8 @@ for my $party ( keys %riksdagspartier ) {
 }
 my %rdp_procentandel;
 for my $party ( keys %riksdagspartier ) {
-    $rdp_procentandel{$party} = $riksdagspartier{$party}->{total} / $sum * 100;
+    $rdp_procentandel{$party}
+        = $riksdagspartier{$party}->{total} / $sum * 100;
 }
 
 # read detailed data
@@ -198,9 +199,11 @@ for my $p (
 my @max_ovr;
 for my $p (
     sort {
-               $distrikt_stats{$b}{total} <=> $distrikt_stats{$a}{total}
-            || $distriktsdata{ $distrikt_stats{$a}{max_id} }{Totalsumma}
-            <=> $distriktsdata{ $distrikt_stats{$b}{max_id} }{Totalsumma}
+        $distrikt_stats{$b}{total} <=> $distrikt_stats{$a}{total}
+	  || lc($a) cmp lc($b)
+	  || $distriktsdata{ $distrikt_stats{$a}{max_id} }{Totalsumma}
+	  <=> $distriktsdata{ $distrikt_stats{$b}{max_id} }{Totalsumma}
+
     } keys %distrikt_stats
     )
 {
